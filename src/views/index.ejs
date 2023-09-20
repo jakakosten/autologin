@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="" />
+    <meta name="author" content="Jaka Kosten" />
+    <title>NodeJs Login and Register</title>
+    <link
+      rel="canonical"
+      href="https://getbootstrap.com/docs/5.2/examples/cover/"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor"
+      crossorigin="anonymous"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <style>
+      .container {
+        display: flex;
+        flex-direction: column;
+        place-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 60vw;
+      }
+
+      .container form {
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+      }
+
+      .password-container {
+        position: relative;
+        display: flex;
+      }
+
+      #days {
+        width: 10em;
+      }
+
+      #toggle-icon {
+        position: absolute;
+        right: 1rem;
+        top: 0.7em;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <form id="meal-form">
+        <!-- Select a meal -->
+        <label for="meal-select">Select a meal:</label>
+        <select id="meal-select" name="meal-select">
+          <option value="50161">Meni 1</option>
+          <option value="50164">Meni 2</option>
+          <option value="50167">Meni 3</option>
+          <option value="50170">Meni 4</option>
+          <option value="50173">Meni 5</option>
+          <option value="50176">Meni 6</option>
+          <option value="0">Odjava</option>
+        </select>
+        <!-- Enter username -->
+        <label for="usernameField">Username:</label>
+        <input
+          type="text"
+          id="usernameField"
+          name="usernameField"
+          value="<%= eAusername %>"
+          disabled
+          required
+        />
+
+        <input
+          type="hidden"
+          id="username"
+          name="username"
+          value="<%= eAusername %>"
+        />
+
+        <!-- Enter password -->
+        <label for="password">Password:</label>
+        <div class="password-container">
+          <input
+            type="password"
+            id="passwordField"
+            name="passwordField"
+            value="<%= eApassword %>"
+            disabled
+            required
+          />
+          <i
+            class="fa-solid fa-eye"
+            id="toggle-icon"
+            onclick="togglePassword('passwordField', 'toggle-icon')"
+          ></i>
+        </div>
+
+        <input
+          type="hidden"
+          id="password"
+          name="password"
+          value="<%= eApassword %>"
+        />
+
+        <label for="checkboxField">Omogoči samodejno prijavo:</label>
+        <input type="checkbox" name="checkboxField" id="checkboxField"
+        value="<%= checkboxState %>" <% if (checkboxState === '1') { %> // Add
+        this block to conditionally set the 'checked' attribute checked <% } %>
+        />
+
+        <!-- Submit button -->
+        <button type="submit" id="submit-btn">Posodobi</button>
+      </form>
+
+      <a href="/odjava">ODJAVA</a>
+    </div>
+
+    <script>
+      const selectedMealValue = "<%= preferedMenu %>";
+      const mealSelect = document.getElementById("meal-select");
+
+      for (let i = 0; i < mealSelect.options.length; i++) {
+        const option = mealSelect.options[i];
+        if (option.value === selectedMealValue) {
+          option.selected = true;
+          break; // Stop looping once a match is found
+        }
+      }
+
+      function togglePassword(fieldId, toggleIconId) {
+        const passwordField = document.getElementById(fieldId);
+        const toggleIcon = document.getElementById(toggleIconId);
+
+        if (passwordField.type === "password") {
+          passwordField.type = "text";
+          toggleIcon.className = "fa fa-eye-slash";
+        } else {
+          passwordField.type = "password";
+          toggleIcon.className = "fa fa-eye";
+        }
+      }
+
+      const checkboxField = document.getElementById("checkboxField");
+
+      // Check the checkbox based on its value
+      if (checkboxField.value === "1") {
+        checkboxField.checked = true;
+      } else {
+        checkboxField.checked = false;
+      }
+
+      // Add an event listener to the checkbox
+      checkboxField.addEventListener("change", function () {
+        if (this.checked) {
+          this.value = "1";
+        } else {
+          this.value = "0";
+        }
+      });
+
+      // Select DOM elements
+      const form = document.querySelector("#meal-form");
+      const formBtn = document.querySelector("#submit-btn");
+      const formDate = document.querySelector("#date");
+      const revealBtn = document.querySelector("#revealBtn");
+      const passwordField = document.querySelector("#password");
+
+      // Handle form submission
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const response2 = await fetch("http://localhost:3000/update", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data2 = await response2.json();
+        console.log(response2);
+        console.log(data2);
+      });
+
+      // Handle password reveal button click
+      const icon = document.querySelector("#eye-icon");
+      revealBtn.addEventListener("click", () => {
+        if (passwordField.type === "password") {
+          // If the password field is currently hidden, show it
+          if (icon.classList.contains("fa-eye")) {
+            passwordField.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+          }
+        } else {
+          // If the password field is currently shown, hide it
+          if (icon.classList.contains("fa-eye-slash")) {
+            passwordField.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+          }
+        }
+      });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </body>
+</html>
