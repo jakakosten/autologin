@@ -23,23 +23,27 @@ const MySQLStore = require("express-mysql-session")(session);
 const fs = require("fs");
 
 //start of log initiation
-const logsDirectory = "../logs/";
+const logsDirectory = "./logs/";
 if (!fs.existsSync(logsDirectory)) {
   fs.mkdirSync(logsDirectory);
 }
 if (!fs.existsSync(`${logsDirectory}/all_logs.log`)) {
-  fs.writeFileSync(`${logsDirectory}/all_logs.log`, ""); // Create an empty file
+  fs.writeFileSync(`${logsDirectory}/all_logs.log`, "");
 }
 if (!fs.existsSync(`${logsDirectory}/registration.log`)) {
-  fs.writeFileSync(`${logsDirectory}/registration.log`, ""); // Create an empty file
+  fs.writeFileSync(`${logsDirectory}/registration.log`, "");
 }
 
 const logsStream = fs.createWriteStream(`${logsDirectory}/all_logs.log`, {
   flags: "a",
 });
-const registrationStream = fs.createWriteStream("./logs/registration.log", {
-  flags: "a",
-});
+const registrationStream = fs.createWriteStream(
+  `${logsDirectory}/registration.log`,
+  {
+    flags: "a",
+  }
+);
+
 // end of log initiation
 
 const sessionStore = new MySQLStore({
