@@ -180,10 +180,10 @@
 
       // Handle form submission
       form.addEventListener("submit", async (event) => {
-        console.log("BUTTON CLICKED")
+        console.log("BUTTON CLICKED");
         event.preventDefault();
         const formData = new FormData(form);
-        const response2 = await fetch("https://jakakosten.si/update", {
+        const response2 = await fetch("<%= webHost %>/update", {
           method: "POST",
           body: formData,
         });

@@ -20,6 +20,12 @@ const scrapeServer = require("./scrapeServer.js");
 const multer = require("multer");
 const upload = multer();
 const MySQLStore = require("express-mysql-session")(session);
+const fs = require("fs");
+
+const logsStream = fs.createWriteStream("./logs/all_logs.log", { flags: "a" });
+const registrationStream = fs.createWriteStream("./logs/registration.log", {
+  flags: "a",
+});
 
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
@@ -27,7 +33,7 @@ const sessionStore = new MySQLStore({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  expiration: 24 * 60 * 60 * 1000, // Session expiration time (in milliseconds)
+  expiration: 24 * 60 * 60 * 1000,
 });
 
 const registerLimiter = rateLimit({
@@ -154,7 +160,22 @@ app.post(
             req.flash("error", "An error occurred during registration.");
             return res.redirect("/registracija");
           }
-          console.log(results);
+
+          // log writing start
+          let now = new Date();
+          let formattedDate = now.toISOString().slice(0, 10);
+          let formattedTime = now.toTimeString().slice(0, 8);
+
+          let logMessage = `[ ${formattedDate} | ${formattedTime} ] User with email: ${email} has registered at: ${formattedDate} ${formattedTime}\n`;
+
+          console.log(logMessage);
+          logsStream.write(logMessage);
+          registrationStream.write(logMessage);
+
+          logsStream.end();
+          registrationStream.end();
+          // end of log writing
+
           req.flash(
             "success",
             "Registracija uspešna! Sedaj počakaj, da ti odobrimo račun."
@@ -269,6 +290,7 @@ app.get("/", user.checkAuthenticated, (req, res) => {
         eApassword: user[0].eApassword,
         checkboxState: user[0].checkboxState,
         preferedMenu: user[0].preferedMenu,
+        webHost: process.env.WEB_HOST,
       });
     })
     .catch((e) => {
