@@ -180,16 +180,19 @@
 
       // Handle form submission
       form.addEventListener("submit", async (event) => {
+        console.log("BUTTON CLICKED")
         event.preventDefault();
         const formData = new FormData(form);
-        const response2 = await fetch("http://localhost:3000/update", {
+        const response2 = await fetch("https://jakakosten.si/update", {
           method: "POST",
           body: formData,
         });
+        console.log("Form POSTED");
 
         const data2 = await response2.json();
         console.log(response2);
         console.log(data2);
+        console.log("COMPLEATED");
       });
 
       // Handle password reveal button click

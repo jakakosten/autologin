@@ -172,6 +172,7 @@ app.post(
 
 // auto login checkbox check
 app.post("/update", upload.none(), (req, res) => {
+  console.log("UPDATE");
   const checkboxValue = req.body.checkboxField;
   const username = req.body.username;
   const selectedMenu = req.body["meal-select"];
