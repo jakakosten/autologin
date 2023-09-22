@@ -22,10 +22,25 @@ const upload = multer();
 const MySQLStore = require("express-mysql-session")(session);
 const fs = require("fs");
 
-const logsStream = fs.createWriteStream("./logs/all_logs.log", { flags: "a" });
+//start of log initiation
+const logsDirectory = "../logs/";
+if (!fs.existsSync(logsDirectory)) {
+  fs.mkdirSync(logsDirectory);
+}
+if (!fs.existsSync("all_logs.log")) {
+  fs.writeFileSync("all_logs.log", ""); // Create an empty file
+}
+if (!fs.existsSync("registration.log")) {
+  fs.writeFileSync("registration.log", ""); // Create an empty file
+}
+
+const logsStream = fs.createWriteStream(`${logsDirectory}/all_logs.log`, {
+  flags: "a",
+});
 const registrationStream = fs.createWriteStream("./logs/registration.log", {
   flags: "a",
 });
+// end of log initiation
 
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
