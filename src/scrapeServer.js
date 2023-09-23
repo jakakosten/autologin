@@ -5,6 +5,7 @@ const moment = require("moment");
 const router = express.Router();
 const cron = require("node-cron");
 const connection = require("./config/db");
+const { logsStream, scrapeLogs } = require("./handlers/logHandler.js");
 
 router.use(express.static(__dirname));
 router.use(express.urlencoded({ extended: true }));
@@ -47,7 +48,36 @@ async function runScraping(user, days) {
   const username = user.eAusername;
   const password = user.eApassword;
 
-  console.log(`Operation started for the username: ${username}`);
+  connection.query(
+    "SELECT id, email FROM users WHERE eAusername = ?",
+    [username],
+    async (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send({ error: "Database query error!" });
+      }
+
+      if (results.length === 0) {
+        console.error(`User not found for username: ${username}`);
+        return;
+      }
+
+      const userId = results[0].id;
+      const userEmail = results[0].email;
+
+      // log writing start
+      let now = new Date();
+      let formattedDate = now.toISOString().slice(0, 10);
+      let formattedTime = now.toTimeString().slice(0, 8);
+
+      let logMessage = `[ SCRAPE | ${formattedDate} | ${formattedTime} ] Scrape/Autologin process started for user with id: ${userId} email: ${userEmail} at: ${formattedDate} ${formattedTime}\n`;
+
+      console.log(logMessage);
+      logsStream.write(logMessage);
+      scrapeLogs.write(logMessage);
+      // end of log writing
+    }
+  );
 
   const DIJAKI_PREHRANA = "dijaki-prehrana";
   const INSTITUTION_ID = "11239";
@@ -55,12 +85,6 @@ async function runScraping(user, days) {
 
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
-
-  console.log(
-    `Operation started for the username: ${username} at: ${moment().format(
-      "MM/DD/YYYY"
-    )} ${moment().format("hh:mm:ss A")}`
-  );
 
   // Navigate to login page
   await page.goto("https://www.easistent.com/");
@@ -153,8 +177,6 @@ async function runScraping(user, days) {
 
         let loginLinkSelector = `#${DIJAKI_PREHRANA}-${date}-${MEAL_CODE}-${INSTITUTION_ID}-${ACTION} > a `;
 
-        console.log(loginLinkSelector);
-
         await page.waitForSelector(loginLinkSelector, {
           timeout: maxTimeout,
         });
@@ -205,10 +227,39 @@ async function runScraping(user, days) {
   await delay(2000);
   await browser.close();
 
-  console.log(`Operation completed for the username: ${username}`);
+  connection.query(
+    "SELECT id, email FROM users WHERE eAusername = ?",
+    [username],
+    async (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send({ error: "Database query error!" });
+      }
+
+      if (results.length === 0) {
+        console.error(`User not found for username: ${username}`);
+        return;
+      }
+
+      const userId = results[0].id;
+      const userEmail = results[0].email;
+
+      // log writing start
+      let now = new Date();
+      let formattedDate = now.toISOString().slice(0, 10);
+      let formattedTime = now.toTimeString().slice(0, 8);
+
+      let logMessage = `[ SCRAPE | ${formattedDate} | ${formattedTime} ] Scrape/Autologin process ended for user with id: ${userId} email: ${userEmail} at: ${formattedDate} ${formattedTime}\n`;
+
+      console.log(logMessage);
+      logsStream.write(logMessage);
+      scrapeLogs.write(logMessage);
+      // end of log writing
+    }
+  );
 
   activeBrowsers.delete(username);
 }
 
-cron.schedule("0 8 * * 4", scrape);
+cron.schedule("*/35 * * * * * ", scrape);
 module.exports = router;

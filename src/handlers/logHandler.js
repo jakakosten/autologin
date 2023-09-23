@@ -19,6 +19,9 @@ if (!fs.existsSync(`${logsDirectory}/login.log`)) {
 if (!fs.existsSync(`${logsDirectory}/logout.log`)) {
   fs.writeFileSync(`${logsDirectory}/logout.log`, "");
 }
+if (!fs.existsSync(`${logsDirectory}/scrape.log`)) {
+  fs.writeFileSync(`${logsDirectory}/scrape.log`, "");
+}
 
 const logsStream = fs.createWriteStream(`${logsDirectory}/all_logs.log`, {
   flags: "a",
@@ -38,6 +41,9 @@ const loginLogs = fs.createWriteStream(`${logsDirectory}/login.log`, {
 const logoutLogs = fs.createWriteStream(`${logsDirectory}/logout.log`, {
   flags: "a",
 });
+const scrapeLogs = fs.createWriteStream(`${logsDirectory}/scrape.log`, {
+  flags: "a",
+});
 
 module.exports = {
   logsStream,
@@ -45,4 +51,5 @@ module.exports = {
   updateLogs,
   loginLogs,
   logoutLogs,
+  scrapeLogs,
 };
