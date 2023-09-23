@@ -34,7 +34,6 @@ async function scrape(req, res) {
       const days = 7;
 
       for (const user of results) {
-        // Check if the user's browser is already active
         if (!activeBrowsers.has(user.eAusername)) {
           await runScraping(user, days);
         }
@@ -155,7 +154,6 @@ async function runScraping(user, days) {
         let loginLinkSelector = `#${DIJAKI_PREHRANA}-${date}-${MEAL_CODE}-${INSTITUTION_ID}-${ACTION} > a `;
 
         console.log(loginLinkSelector);
-        // #dijaki-prehrana-2023-09-21-50167-11239-akcija > a
 
         await page.waitForSelector(loginLinkSelector, {
           timeout: maxTimeout,

@@ -20,31 +20,12 @@ const scrapeServer = require("./scrapeServer.js");
 const multer = require("multer");
 const upload = multer();
 const MySQLStore = require("express-mysql-session")(session);
-const fs = require("fs");
 
-//start of log initiation
-const logsDirectory = "./logs/";
-if (!fs.existsSync(logsDirectory)) {
-  fs.mkdirSync(logsDirectory);
-}
-if (!fs.existsSync(`${logsDirectory}/all_logs.log`)) {
-  fs.writeFileSync(`${logsDirectory}/all_logs.log`, "");
-}
-if (!fs.existsSync(`${logsDirectory}/registration.log`)) {
-  fs.writeFileSync(`${logsDirectory}/registration.log`, "");
-}
-
-const logsStream = fs.createWriteStream(`${logsDirectory}/all_logs.log`, {
-  flags: "a",
-});
-const registrationStream = fs.createWriteStream(
-  `${logsDirectory}/registration.log`,
-  {
-    flags: "a",
-  }
-);
-
-// end of log initiation
+const {
+  logsStream,
+  registrationStream,
+  updateLogs,
+} = require("./handlers/logHandler.js");
 
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
@@ -80,9 +61,9 @@ app.use(
     secret: process.env.SECRET_KEY,
     resave: false,
     saveUninitialized: false,
-    store: sessionStore, // Use the session store
+    store: sessionStore,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -190,9 +171,6 @@ app.post(
           console.log(logMessage);
           logsStream.write(logMessage);
           registrationStream.write(logMessage);
-
-          logsStream.end();
-          registrationStream.end();
           // end of log writing
 
           req.flash(
@@ -212,7 +190,6 @@ app.post(
 
 // auto login checkbox check
 app.post("/update", upload.none(), (req, res) => {
-  console.log("UPDATE");
   const checkboxValue = req.body.checkboxField;
   const username = req.body.username;
   const selectedMenu = req.body["meal-select"];
@@ -273,6 +250,18 @@ app.post("/update", upload.none(), (req, res) => {
           }
         );
       }
+
+      // log writing start
+      now = new Date();
+      formattedDate = now.toISOString().slice(0, 10);
+      formattedTime = now.toTimeString().slice(0, 8);
+
+      logMessage = `[ UPDATE | ${formattedDate} | ${formattedTime} ] User with id: ${results[0].id} and email: ${results[0].email} has updated values in the database at: ${formattedDate} ${formattedTime}\n`;
+
+      console.log(logMessage);
+      logsStream.write(logMessage);
+      updateLogs.write(logMessage);
+      // end of log writing
 
       res.sendStatus(200);
     }
