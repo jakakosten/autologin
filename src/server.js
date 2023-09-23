@@ -25,6 +25,7 @@ const {
   logsStream,
   registrationStream,
   updateLogs,
+  logoutLogs,
   loginLogs,
 } = require("./handlers/logHandler.js");
 
@@ -328,16 +329,78 @@ app.get("/", user.checkAuthenticated, (req, res) => {
 
 // logout
 app.delete("/odjava", (req, res) => {
-  req.logout(() => {
-    res.redirect("/prijava");
-  });
+  // Fetch user information from the database using the user's ID
+  const userId = req.user.id; // Assuming you have the user's ID in req.user.id
+  connection.query(
+    "SELECT id, email FROM users WHERE id = ?",
+    [userId],
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.sendStatus(500);
+      }
+
+      if (results.length === 0) {
+        return res.sendStatus(404);
+      }
+
+      const user = results[0];
+
+      // Log writing start
+      const now = new Date();
+      const formattedDate = now.toISOString().slice(0, 10);
+      const formattedTime = now.toTimeString().slice(0, 8);
+
+      const logMessage = `[ LOGOUT | ${formattedDate} | ${formattedTime} ] User with id: ${user.id} and email: ${user.email} has logged out of the program: ${formattedDate} ${formattedTime}\n`;
+
+      console.log(logMessage);
+      logsStream.write(logMessage);
+      logoutLogs.write(logMessage);
+      // End of log writing
+
+      req.logout(() => {
+        res.redirect("/prijava");
+      });
+    }
+  );
 });
 
 // logout
 app.get("/odjava", (req, res) => {
-  req.logout(() => {
-    res.redirect("/prijava");
-  });
+  // Fetch user information from the database using the user's ID
+  const userId = req.user.id; // Assuming you have the user's ID in req.user.id
+  connection.query(
+    "SELECT id, email FROM users WHERE id = ?",
+    [userId],
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.sendStatus(500);
+      }
+
+      if (results.length === 0) {
+        return res.sendStatus(404);
+      }
+
+      const user = results[0];
+
+      // Log writing start
+      const now = new Date();
+      const formattedDate = now.toISOString().slice(0, 10);
+      const formattedTime = now.toTimeString().slice(0, 8);
+
+      const logMessage = `[ LOGOUT | ${formattedDate} | ${formattedTime} ] User with id: ${user.id} and email: ${user.email} has logged out of the program: ${formattedDate} ${formattedTime}\n`;
+
+      console.log(logMessage);
+      logsStream.write(logMessage);
+      logoutLogs.write(logMessage);
+      // End of log writing
+
+      req.logout(() => {
+        res.redirect("/prijava");
+      });
+    }
+  );
 });
 
 // register page
