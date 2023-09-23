@@ -25,6 +25,7 @@ const {
   logsStream,
   registrationStream,
   updateLogs,
+  loginLogs,
 } = require("./handlers/logHandler.js");
 
 const sessionStore = new MySQLStore({
@@ -273,20 +274,38 @@ app.post(
   "/prijava",
   loginLimiter,
   user.checkNotAuthenticated,
-  passport.authenticate("local", {
-    successRedirect: "/",
-    failureRedirect: "/prijava",
-    failureFlash: true,
-  })
-);
+  (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        console.error(err);
+        return next(err);
+      }
+      if (!user) {
+        return res.sendStatus(401);
+      }
 
-// check if the user is authenticated
-function checkAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
+      // Log writing start
+      const now = new Date();
+      const formattedDate = now.toISOString().slice(0, 10);
+      const formattedTime = now.toTimeString().slice(0, 8);
+
+      const logMessage = `[ LOGIN | ${formattedDate} | ${formattedTime} ] User with id: ${user.id} and email: ${user.email} has logged in the program: ${formattedDate} ${formattedTime}\n`;
+
+      console.log(logMessage);
+      logsStream.write(logMessage);
+      loginLogs.write(logMessage);
+      // End of log writing
+
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error(err);
+          return next(err);
+        }
+        return res.redirect("/");
+      });
+    })(req, res, next);
   }
-  res.redirect("/prijava");
-}
+);
 
 app.get("/", user.checkAuthenticated, (req, res) => {
   user
