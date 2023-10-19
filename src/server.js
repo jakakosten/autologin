@@ -3,6 +3,10 @@ if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
 
+console.log("Fiuck you PAPEŠkA");
+console.log(process.env.NODE_ENV);
+console.log("FUCK OFF");
+
 const express = require("express");
 const app = express();
 const bcrypt = require("bcrypt");
